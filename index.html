@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JC Eletrodiesel — Sistema de Estoque</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Gerencie seu estoque de maneira profissional, intuitiva e moderna com o EstoquePro. Dashboard completo, alertas de estoque baixo, CRUD de produtos e fornecedores.">
+  <meta name="author" content="EstoquePro Soluções">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Estilos Customizados -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- App Container principal -->
+  <div class="app-container">
+    
+    <!-- Sidebar / Barra Lateral -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+        <span class="logo-text">JC Estoque</span>
+      </div>
+      
+      <nav class="nav-menu">
+        <li class="nav-item">
+          <a class="nav-link active" data-target="view-dashboard" id="nav-btn-dashboard">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span class="nav-link-text">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-target="view-products" id="nav-btn-products">
+            <i class="fa-solid fa-box"></i>
+            <span class="nav-link-text">Produtos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-target="view-transactions" id="nav-btn-transactions">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            <span class="nav-link-text">Movimentações</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-target="view-suppliers" id="nav-btn-suppliers">
+            <i class="fa-solid fa-truck-field"></i>
+            <span class="nav-link-text">Fornecedores</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-target="view-settings" id="nav-btn-settings">
+            <i class="fa-solid fa-sliders"></i>
+            <span class="nav-link-text">Configurações</span>
+          </a>
+        </li>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn" id="theme-toggle-button" aria-label="Alternar Tema Escuro/Claro">
+          <span>Modo Escuro</span>
+          <i class="fa-solid fa-moon" id="theme-icon"></i>
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Bar / Cabeçalho -->
+      <header class="top-bar">
+        <div class="page-title-area">
+          <h1 id="main-view-title">Dashboard</h1>
+          <p id="main-view-subtitle">Resumo estatístico do seu inventário</p>
+        </div>
+        <div class="user-profile-area">
+          <div class="date-badge" id="current-date-badge">
+            <i class="fa-regular fa-calendar"></i>
+            <span id="live-clock">Carregando data...</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- PANE 1: DASHBOARD -->
+      <section class="view-pane active" id="view-dashboard">
+        <!-- Grid de Métricas Rápidas -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-info">
+              <span class="metric-label">Itens no Estoque</span>
+              <span class="metric-value" id="kpi-total-items">0</span>
+              <span class="metric-subtext" id="kpi-sub-items"><i class="fa-solid fa-box"></i> total cadastrado</span>
+            </div>
+            <div class="metric-icon-box accent">
+              <i class="fa-solid fa-cubes"></i>
+            </div>
+          </div>
+          
+          <div class="metric-card">
+            <div class="metric-info">
+              <span class="metric-label">Valor de Custo</span>
+              <span class="metric-value" id="kpi-cost-value">R$ 0,00</span>
+              <span class="metric-subtext" id="kpi-sub-cost"><i class="fa-solid fa-dollar-sign"></i> investimento total</span>
+            </div>
+            <div class="metric-icon-box success">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+          </div>
+          
+          <div class="metric-card">
+            <div class="metric-info">
+              <span class="metric-label">Valor de Venda</span>
+              <span class="metric-value" id="kpi-sale-value">R$ 0,00</span>
+              <span class="metric-subtext" id="kpi-sub-revenue" style="color: var(--success);"><i class="fa-solid fa-arrow-trend-up"></i> Margem estimada</span>
+            </div>
+            <div class="metric-icon-box info">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+          </div>
+          
+          <div class="metric-card" style="cursor: pointer;" onclick="document.getElementById('nav-btn-products').click(); document.getElementById('filter-product-status').value = 'low'; document.getElementById('filter-product-status').dispatchEvent(new Event('change'));">
+            <div class="metric-info">
+              <span class="metric-label">Estoques Baixos</span>
+              <span class="metric-value" id="kpi-low-stock">0</span>
+              <span class="metric-subtext" id="kpi-sub-alerts"><i class="fa-solid fa-triangle-exclamation"></i> itens precisam atenção</span>
+            </div>
+            <div class="metric-icon-box warning">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Gráficos e Alertas -->
+        <div class="charts-grid">
+          <!-- Gráfico de Pizza/Donut de Categorias -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2 class="chart-card-title">Distribuição por Categoria</h2>
+              <span class="metric-subtext"><i class="fa-solid fa-filter"></i> por volume</span>
+            </div>
+            <div class="chart-canvas-container">
+              <canvas id="category-chart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Lista de Alertas de Estoque Mínimo -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2 class="chart-card-title">Alertas de Reposição</h2>
+              <span class="badge badge-danger" id="badge-low-stock-count">0</span>
+            </div>
+            <div class="alert-list" id="alert-items-list">
+              <!-- Preenchido dinamicamente via JS -->
+              <div class="alert-empty-state">
+                <i class="fa-solid fa-circle-check"></i>
+                <p>Nenhum item com estoque baixo!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Últimas Movimentações -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h2 class="chart-card-title">Movimentações Recentes</h2>
+            <button class="btn btn-primary btn-sm" id="btn-quick-transaction">
+              <i class="fa-solid fa-plus"></i> Registrar Entrada/Saída
+            </button>
+          </div>
+          <div class="table-container">
+            <div class="table-responsive">
+              <table class="table" id="dashboard-recent-transactions-table">
+                <thead>
+                  <tr>
+                    <th>Data/Hora</th>
+                    <th>Produto</th>
+                    <th>Tipo</th>
+                    <th>Quantidade</th>
+                    <th>Valor Unit.</th>
+                    <th>Valor Total</th>
+                    <th>Motivo</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-recent-transactions-tbody">
+                  <!-- Gerado dinamicamente via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANE 2: PRODUTOS -->
+      <section class="view-pane" id="view-products">
+        <div class="actions-bar">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="search-product-input" placeholder="Buscar por Nome ou SKU...">
+          </div>
+          <div class="filters-group">
+            <select class="filter-select" id="filter-product-category">
+              <option value="all">Todas as Categorias</option>
+              <!-- Preenchido via JS -->
+            </select>
+            <select class="filter-select" id="filter-product-status">
+              <option value="all">Todos os Status</option>
+              <option value="normal">Estoque Normal</option>
+              <option value="low">Estoque Baixo</option>
+              <option value="out">Esgotado</option>
+            </select>
+            <button class="btn btn-primary" id="btn-add-product">
+              <i class="fa-solid fa-plus"></i> Novo Produto
+            </button>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <div class="table-responsive">
+            <table class="table" id="products-table">
+              <thead>
+                <tr>
+                  <th>Produto / SKU</th>
+                  <th>Categoria</th>
+                  <th>Qtd. em Estoque</th>
+                  <th>Preço de Custo</th>
+                  <th>Preço de Venda</th>
+                  <th>Fornecedor</th>
+                  <th>Localização</th>
+                  <th>Status</th>
+                  <th style="width: 100px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="products-tbody">
+                <!-- Gerado dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANE 3: MOVIMENTAÇÕES -->
+      <section class="view-pane" id="view-transactions">
+        <div class="actions-bar">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="search-transaction-input" placeholder="Buscar por Produto ou Motivo...">
+          </div>
+          <div class="filters-group">
+            <select class="filter-select" id="filter-transaction-type">
+              <option value="all">Todas as Movimentações</option>
+              <option value="in">Entradas (Compras)</option>
+              <option value="out">Saídas (Vendas/Ajustes)</option>
+            </select>
+            <button class="btn btn-success" id="btn-add-transaction">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i> Registrar Movimentação
+            </button>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <div class="table-responsive">
+            <table class="table" id="transactions-table">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Produto</th>
+                  <th>SKU</th>
+                  <th>Tipo</th>
+                  <th>Quantidade</th>
+                  <th>Valor Unitário</th>
+                  <th>Valor Total</th>
+                  <th>Motivo / Descrição</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-tbody">
+                <!-- Gerado dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANE 4: FORNECEDORES -->
+      <section class="view-pane" id="view-suppliers">
+        <div class="actions-bar">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="search-supplier-input" placeholder="Buscar por Fornecedor ou Documento...">
+          </div>
+          <button class="btn btn-primary" id="btn-add-supplier">
+            <i class="fa-solid fa-plus"></i> Novo Fornecedor
+          </button>
+        </div>
+        
+        <div class="table-container">
+          <div class="table-responsive">
+            <table class="table" id="suppliers-table">
+              <thead>
+                <tr>
+                  <th>Nome do Fornecedor</th>
+                  <th>Representante</th>
+                  <th>CNPJ / CPF</th>
+                  <th>Telefone</th>
+                  <th>E-mail</th>
+                  <th>Endereço</th>
+                  <th style="width: 100px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="suppliers-tbody">
+                <!-- Gerado dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANE 5: CONFIGURAÇÕES -->
+      <section class="view-pane" id="view-settings">
+        <div class="form-grid">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2 class="chart-card-title">Dados da Empresa / Loja</h2>
+            </div>
+            <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label" for="settings-company-name">Nome da Empresa</label>
+                <input type="text" class="form-input" id="settings-company-name" placeholder="Ex: Minha Empresa LTDA">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settings-currency">Moeda Padrão</label>
+                <select class="form-select" id="settings-currency">
+                  <option value="R$">Real (R$)</option>
+                  <option value="US$">Dólar (US$)</option>
+                  <option value="€">Euro (€)</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="btn-save-company-settings">
+                <i class="fa-solid fa-floppy-disk"></i> Salvar Dados
+              </button>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2 class="chart-card-title">Gerenciamento de Dados</h2>
+            </div>
+            <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; gap: 16px;">
+              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                Exporte todos os seus dados (Produtos, Fornecedores, Histórico) para segurança ou importe um arquivo JSON para restaurar um backup anterior.
+              </p>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex-grow: 1;" id="btn-export-data">
+                  <i class="fa-solid fa-file-export"></i> Exportar Dados
+                </button>
+                <button class="btn btn-secondary" style="flex-grow: 1;" id="btn-import-trigger">
+                  <i class="fa-solid fa-file-import"></i> Importar Dados
+                </button>
+                <input type="file" id="import-data-file" accept=".json" style="display: none;">
+              </div>
+              <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
+              <div class="form-group">
+                <span class="form-label" style="color: var(--danger);">Zona de Perigo</span>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                  Esta ação removerá permanentemente todos os dados do servidor Supabase.
+                </p>
+                <button class="btn btn-danger btn-sm" id="btn-reset-database">
+                  <i class="fa-solid fa-trash-can"></i> Reiniciar Banco de Dados
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+    </main>
+  </div>
+
+  <!-- ================= MODAIS ================= -->
+  
+  <!-- MODAL: PRODUTO -->
+  <div class="modal-overlay" id="modal-product">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-product-title">Novo Produto</h2>
+        <button class="modal-close" onclick="closeModal('modal-product')">&times;</button>
+      </div>
+      <form id="form-product" onsubmit="event.preventDefault(); handleSaveProduct();">
+        <div class="modal-body">
+          <input type="hidden" id="form-product-id">
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label class="form-label" for="prod-name">Nome do Produto *</label>
+              <input type="text" class="form-input" id="prod-name" required placeholder="Ex: Notebook Ultra Slim">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prod-sku">Código / SKU *</label>
+              <input type="text" class="form-input" id="prod-sku" required placeholder="Ex: NTB-SLM-01">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prod-category-select">Categoria *</label>
+              <select class="form-select" id="prod-category-select" required>
+                <option value="">Selecione uma categoria...</option>
+                <!-- Preenchido via JS a partir do banco -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prod-price-cost">Preço de Custo (R$) *</label>
+              <input type="number" step="0.01" min="0" class="form-input" id="prod-price-cost" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prod-price-sell">Preço de Venda (R$) *</label>
+              <input type="number" step="0.01" min="0" class="form-input" id="prod-price-sell" required placeholder="0.00">
+            </div>
+            <div class="form-group" id="initial-stock-group">
+              <label class="form-label" for="prod-quantity">Estoque Inicial</label>
+              <input type="number" min="0" class="form-input" id="prod-quantity" value="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prod-min-quantity">Estoque Mínimo (Alerta) *</label>
+              <input type="number" min="0" class="form-input" id="prod-min-quantity" required value="5">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label" for="prod-supplier">Fornecedor Associado</label>
+              <select class="form-select" id="prod-supplier">
+                <option value="">Selecione um fornecedor...</option>
+                <!-- Preenchido via JS -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prod-location">Localização (Prateleira/Gaveta)</label>
+              <input type="text" class="form-input" id="prod-location" placeholder="Ex: Prateleira A3, Gaveta B2">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label" for="prod-desc">Descrição do Produto</label>
+              <textarea class="form-textarea" id="prod-desc" placeholder="Detalhes técnicos, compatibilidade, observações..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-product')">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-product-submit">Salvar Produto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: FORNECEDOR -->
+  <div class="modal-overlay" id="modal-supplier">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-supplier-title">Novo Fornecedor</h2>
+        <button class="modal-close" onclick="closeModal('modal-supplier')">&times;</button>
+      </div>
+      <form id="form-supplier" onsubmit="event.preventDefault(); handleSaveSupplier();">
+        <div class="modal-body">
+          <input type="hidden" id="form-supplier-id">
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label class="form-label" for="sup-name">Nome do Fornecedor / Razão Social *</label>
+              <input type="text" class="form-input" id="sup-name" required placeholder="Ex: Tech Atacado S.A.">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sup-contact">Representante / Contato</label>
+              <input type="text" class="form-input" id="sup-contact" placeholder="Ex: João da Silva">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sup-doc">CNPJ / CPF *</label>
+              <input type="text" class="form-input" id="sup-doc" required placeholder="00.000.000/0001-00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sup-phone">Telefone</label>
+              <input type="text" class="form-input" id="sup-phone" placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sup-email">E-mail</label>
+              <input type="email" class="form-input" id="sup-email" placeholder="fornecedor@email.com">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label" for="sup-address">Endereço Completo</label>
+              <input type="text" class="form-input" id="sup-address" placeholder="Rua, Número, Bairro, Cidade/UF">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-supplier')">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-supplier-submit">Salvar Fornecedor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: MOVIMENTAÇÃO DE ESTOQUE (TRANSAÇÃO) -->
+  <div class="modal-overlay" id="modal-transaction">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Registrar Movimentação de Estoque</h2>
+        <button class="modal-close" onclick="closeModal('modal-transaction')">&times;</button>
+      </div>
+      <form id="form-transaction" onsubmit="event.preventDefault(); handleSaveTransaction();">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label class="form-label" for="tx-product-select">Selecione o Produto *</label>
+              <select class="form-select" id="tx-product-select" required onchange="handleTxProductChange();">
+                <option value="">Escolha um produto...</option>
+                <!-- Preenchido via JS -->
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="tx-type-select">Tipo de Movimentação *</label>
+              <select class="form-select" id="tx-type-select" required onchange="handleTxTypeChange();">
+                <option value="in">Entrada (Compra de Estoque)</option>
+                <option value="out">Saída (Venda / Ajuste)</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="tx-quantity">Quantidade *</label>
+              <input type="number" min="1" class="form-input" id="tx-quantity" required placeholder="Qtd. de itens">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="tx-unit-price">Valor Unitário (R$)</label>
+              <input type="number" step="0.01" min="0" class="form-input" id="tx-unit-price" placeholder="Deixe em branco para usar o padrão">
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;" id="tx-unit-price-helper">
+                Custo padrão: R$ 0,00 | Venda padrão: R$ 0,00
+              </p>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="tx-date">Data / Hora</label>
+              <input type="datetime-local" class="form-input" id="tx-date">
+            </div>
+            
+            <div class="form-group col-span-2">
+              <label class="form-label" for="tx-reason">Motivo / Descrição *</label>
+              <input type="text" class="form-input" id="tx-reason" required placeholder="Ex: Compra lote 23 ou Venda PDV #1043">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-transaction')">Cancelar</button>
+          <button type="submit" class="btn btn-success">Confirmar Registro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Container de Toasts -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="app.js" defer></script>
+</body>
+</html>
