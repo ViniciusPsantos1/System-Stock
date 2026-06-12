@@ -4,7 +4,7 @@
 // ============================================================
 
 // CONFIG: cole aqui sua URL e chave anon do projeto Supabase
-const SUPABASE_URL = 'https://lzrjikaunrgazebbquym.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://lzrjikaunrgazebbquym.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_4LG_gdB9tdb5V_l5a2cl8A_lcQvJv6I';
 
 // Cliente Supabase (carregado via CDN no index.html)
@@ -248,6 +248,7 @@ function initNavigation() {
     'view-products': { title: 'Produtos', subtitle: 'Gerenciamento do catálogo de peças' },
     'view-transactions': { title: 'Movimentações de Estoque', subtitle: 'Histórico de entradas e saídas' },
     'view-suppliers': { title: 'Fornecedores', subtitle: 'Cadastro e dados dos fornecedores' },
+    'view-categories': { title: 'Categorias de Produtos', subtitle: 'Gerenciamento de categorias' },
     'view-settings': { title: 'Configurações', subtitle: 'Opções de sistema e preferências' },
   };
 
@@ -267,6 +268,7 @@ function initNavigation() {
       if (target === 'view-products') { await loadProducts(); renderProducts(); }
       if (target === 'view-transactions') { await loadTransactions(); renderTransactions(); }
       if (target === 'view-suppliers') { await loadSuppliers(); renderSuppliers(); }
+      if (target === 'view-categories') { await loadCategories(); renderCategories(); }
       if (target === 'view-settings') renderSettings();
     });
   });
@@ -321,6 +323,24 @@ function initEventListeners() {
   document.getElementById('search-transaction-input')?.addEventListener('input', renderTransactions);
   document.getElementById('filter-transaction-type')?.addEventListener('change', renderTransactions);
   document.getElementById('search-supplier-input')?.addEventListener('input', renderSuppliers);
+
+  document.getElementById('btn-add-category')?.addEventListener('click', () => {
+    document.getElementById('modal-category-title').textContent = 'Nova Categoria';
+    document.getElementById('form-category-id').value = '';
+    document.getElementById('form-category-callback').value = '';
+    document.getElementById('form-category').reset();
+    openModal('modal-category');
+  });
+
+  document.getElementById('btn-quick-add-category')?.addEventListener('click', () => {
+    document.getElementById('modal-category-title').textContent = 'Nova Categoria (Criação Rápida)';
+    document.getElementById('form-category-id').value = '';
+    document.getElementById('form-category-callback').value = 'prod-category-select';
+    document.getElementById('form-category').reset();
+    openModal('modal-category');
+  });
+
+  document.getElementById('search-category-input')?.addEventListener('input', renderCategories);
 }
 
 // ============================================================
@@ -926,6 +946,120 @@ window.deleteSupplier = async function (id) {
     showLoadingOverlay(false);
   }
 };
+// ============================================================
+// CATEGORIAS
+// ============================================================
+function renderCategories() {
+  const search = document.getElementById('search-category-input').value.toLowerCase();
+  const filtered = categories.filter(c => c.nome.toLowerCase().includes(search));
+
+  const tbody = document.getElementById('categories-tbody');
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:30px;">Nenhuma categoria encontrada.</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(cat => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${cat.nome}</strong></td>
+      <td>
+        <div class="table-actions">
+          <button class="action-btn edit"   onclick="editCategory('${cat.id}')"   title="Editar"><i class="fa-solid fa-pencil"></i></button>
+          <button class="action-btn delete" onclick="deleteCategory('${cat.id}')" title="Excluir"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function handleSaveCategory() {
+  const id = document.getElementById('form-category-id').value;
+  const name = document.getElementById('cat-name').value.trim();
+  const callbackSelectId = document.getElementById('form-category-callback').value;
+
+  if (!name) {
+    showToast('Erro', 'O nome da categoria é obrigatório.', 'danger');
+    return;
+  }
+
+  showLoadingOverlay(true);
+  try {
+    let savedId = id;
+    if (id) {
+      const { error } = await db.from('categorias').update({ nome: name }).eq('id', id);
+      if (error) throw error;
+      showToast('Sucesso', 'Categoria editada.', 'success');
+    } else {
+      const { data, error } = await db.from('categorias').insert({ nome: name }).select().single();
+      if (error) throw error;
+      savedId = data.id;
+      showToast('Sucesso', 'Categoria cadastrada.', 'success');
+    }
+    
+    await loadCategories();
+    closeModal('modal-category');
+
+    // Se veio do atalho de criação rápida, seleciona a categoria recém-criada
+    if (callbackSelectId) {
+      populateCategoriesDropdown(callbackSelectId, savedId);
+    }
+
+    const active = document.querySelector('.view-pane.active')?.id;
+    if (active === 'view-categories') renderCategories();
+    if (active === 'view-products') renderProducts();
+  } catch (err) {
+    showToast('Erro', err.message || 'Erro ao salvar a categoria.', 'danger');
+  } finally {
+    showLoadingOverlay(false);
+  }
+}
+
+window.editCategory = function (id) {
+  const cat = categories.find(c => c.id === id);
+  if (!cat) return;
+  document.getElementById('modal-category-title').textContent = 'Editar Categoria';
+  document.getElementById('form-category-id').value = cat.id;
+  document.getElementById('form-category-callback').value = '';
+  document.getElementById('cat-name').value = cat.nome;
+  openModal('modal-category');
+};
+
+window.deleteCategory = async function (id) {
+  const cat = categories.find(c => c.id === id);
+  if (!cat) return;
+  
+  // Como temos ON DELETE SET NULL, os produtos associados perderão o vínculo
+  const linked = products.filter(p => p.categoriaId === id);
+  let msg = `Excluir a categoria '${cat.nome}'?`;
+  if (linked.length > 0) {
+    msg = `${linked.length} produto(s) vinculado(s) terão a categoria alterada para "Outros". ${msg}`;
+  }
+  
+  if (!confirm(msg)) return;
+
+  showLoadingOverlay(true);
+  try {
+    const { error } = await db.from('categorias').delete().eq('id', id);
+    if (error) throw error;
+    
+    showToast('Excluído', `Categoria '${cat.nome}' removida.`, 'warning');
+    await Promise.all([loadCategories(), loadProducts()]);
+    
+    const active = document.querySelector('.view-pane.active')?.id;
+    if (active === 'view-categories') renderCategories();
+    if (active === 'view-products') renderProducts();
+  } catch (err) {
+    showToast('Erro', err.message || 'Erro ao excluir a categoria.', 'danger');
+  } finally {
+    showLoadingOverlay(false);
+  }
+};
+
+window.handleSaveCategory = handleSaveCategory;
 
 // ============================================================
 // CONFIGURAÇÕES
